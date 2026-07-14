@@ -1,0 +1,132 @@
+name: HOI4 static checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/ci.yml"
+      - "action.yml"
+      - "examples/**"
+      - "hoi4_ci/**"
+      - "tests/**"
+      - "README.md"
+  schedule:
+    - cron: "17 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out checker
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+
+      - name: Run unit tests
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python -m unittest discover -s tests -v
+
+  faith-in-steel-smoke:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out checker
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          path: checker
+
+      - name: Check out Faith in Steel smoke paths
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: Faith-in-Steel/Faith-in-Steel
+          path: target
+          sparse-checkout: |
+            /*.mod
+            /common/
+            /events/
+            /history/states/
+            /interface/
+            /localisation/
+            /map/strategicregions/
+          sparse-checkout-cone-mode: false
+
+      - name: Run Faith in Steel smoke checks
+        uses: ./checker
+        with:
+          path: target
+          format: github
+          json-report: checker/hoi4-ci-report.json
+
+      - name: Upload smoke report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: faith-in-steel-smoke-report
+          path: checker/hoi4-ci-report.json
+          if-no-files-found: warn
+          retention-days: 7
+
+  faith-in-steel-full:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out checker
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          path: checker
+
+      - name: Check out Faith in Steel text data
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: Faith-in-Steel/Faith-in-Steel
+          path: target
+          sparse-checkout: |
+            /*.mod
+            /*.txt
+            /common/
+            /events/
+            /gfx/**/*.asset
+            /gfx/**/*.fxh
+            /gfx/**/*.gfx
+            /gfx/**/*.shader
+            /history/
+            /interface/
+            /localisation/
+            /map/*.csv
+            /map/*.txt
+            /map/strategicregions/
+            /music/**/*.asset
+            /music/**/*.txt
+            /portraits/
+          sparse-checkout-cone-mode: false
+
+      - name: Run Faith in Steel full checks
+        uses: ./checker
+        with:
+          path: target
+          format: github
+          json-report: checker/hoi4-ci-report.json
+
+      - name: Upload full report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: faith-in-steel-full-report
+          path: checker/hoi4-ci-report.json
+          if-no-files-found: warn
+          retention-days: 7

@@ -1,0 +1,104 @@
+name: HOI4 static checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "common/**"
+      - "events/**"
+      - "history/**"
+      - "interface/**"
+      - "localisation/**"
+      - "map/**"
+      - "music/**"
+      - "portraits/**"
+      - "*.mod"
+      - ".github/workflows/hoi4-static-checks.yml"
+  schedule:
+    - cron: "17 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out smoke paths
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          sparse-checkout: |
+            /*.mod
+            /common/
+            /events/
+            /history/states/
+            /interface/
+            /localisation/
+            /map/strategicregions/
+          sparse-checkout-cone-mode: false
+
+      - name: Run smoke checks
+        uses: Atlantropa-hoi4/HOI4-CI@REVIEWED_COMMIT_SHA
+        with:
+          path: .
+          format: github
+          json-report: hoi4-ci-report.json
+
+      - name: Upload smoke report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: hoi4-smoke-report
+          path: hoi4-ci-report.json
+          if-no-files-found: warn
+          retention-days: 7
+  full:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out text data
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          sparse-checkout: |
+            /*.mod
+            /*.txt
+            /common/
+            /events/
+            /gfx/**/*.asset
+            /gfx/**/*.fxh
+            /gfx/**/*.gfx
+            /gfx/**/*.shader
+            /history/
+            /interface/
+            /localisation/
+            /map/*.csv
+            /map/*.txt
+            /map/strategicregions/
+            /music/**/*.asset
+            /music/**/*.txt
+            /portraits/
+          sparse-checkout-cone-mode: false
+
+      - name: Run full checks
+        uses: Atlantropa-hoi4/HOI4-CI@REVIEWED_COMMIT_SHA
+        with:
+          path: .
+          format: github
+          json-report: hoi4-ci-report.json
+
+      - name: Upload full report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: hoi4-full-report
+          path: hoi4-ci-report.json
+          if-no-files-found: warn
+          retention-days: 7

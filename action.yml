@@ -1,0 +1,39 @@
+name: HOI4 static checks
+description: Run dependency-free static checks against a HOI4 mod checkout.
+
+inputs:
+  path:
+    description: Mod root relative to the caller workspace.
+    required: false
+    default: "."
+  format:
+    description: Console output format (human or github).
+    required: false
+    default: github
+  json-report:
+    description: Optional JSON report path relative to the caller workspace.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+      with:
+        python-version: "3.11"
+
+    - name: Run HOI4 static checks
+      shell: bash
+      env:
+        HOI4_CI_FORMAT: ${{ inputs.format }}
+        HOI4_CI_PATH: ${{ inputs.path }}
+        HOI4_CI_REPORT: ${{ inputs.json-report }}
+        PYTHONPATH: ${{ github.action_path }}
+        PYTHONDONTWRITEBYTECODE: "1"
+      run: |
+        args=("${HOI4_CI_PATH}" --format "${HOI4_CI_FORMAT}")
+        if [[ -n "${HOI4_CI_REPORT}" ]]; then
+          args+=(--json-report "${HOI4_CI_REPORT}")
+        fi
+        python -m hoi4_ci "${args[@]}"
