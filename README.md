@@ -5,9 +5,8 @@ repositories. It is designed for Linux CI runners where the game and vanilla
 data are not installed.
 
 The initial rule set follows the repository structure and script forms used by
-`Kaiserreich/Kaiserreich-4-Development`, while keeping project-specific IDs and
-policies outside the checker. `Faith-in-Steel/Faith-in-Steel` is the first
-integration target.
+`Kaiserreich`, while keeping project-specific IDs and
+policies outside the checker.
 
 ## Checks
 
