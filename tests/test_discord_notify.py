@@ -105,6 +105,10 @@ class DiscordNotifyTests(unittest.TestCase):
         self.assertEqual(
             webhook_request.get_header("Content-type"), "application/json"
         )
+        self.assertEqual(
+            webhook_request.get_header("User-agent"),
+            discord_notify.USER_AGENT,
+        )
         payload = json.loads(webhook_request.data)
         self.assertEqual(payload["embeds"][0]["title"], "Smoke checks: PASS")
 
