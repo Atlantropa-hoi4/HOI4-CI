@@ -97,6 +97,21 @@ The Faith in Steel template is available at
 intentional: an unpinned branch reference would allow checker changes to alter
 the mod's CI without review.
 
+### Discord notifications
+
+The Faith in Steel template can optionally post each smoke or full-check result
+to a Discord channel. Create an incoming webhook for the channel, then add its
+URL as a repository Actions secret named `DISCORD_WEBHOOK_URL` under
+**Settings > Secrets and variables > Actions**. Do not commit the URL: possession
+of a Discord webhook URL grants permission to post through that webhook.
+
+Notifications include the job status, diagnostic counts, ref, commit, and a
+link to the GitHub Actions run. A failed check also attaches the complete JSON
+report when the report was generated. If the secret is absent, notification is
+skipped; if Discord is unavailable, the notification step does not replace the
+checker result. The notification uses the companion action under
+`discord-notify/` at the same reviewed commit as the checker.
+
 ## Development
 
 Run the dependency-free test suite with:

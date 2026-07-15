@@ -1,0 +1,31 @@
+name: HOI4 CI Discord notification
+description: Post a HOI4 CI result and optional failure report to Discord.
+
+inputs:
+  webhook-url:
+    description: Discord incoming webhook URL. Pass this from a GitHub secret.
+    required: false
+    default: ""
+  job-name:
+    description: Human-readable name for the check job.
+    required: true
+  job-status:
+    description: GitHub Actions job status.
+    required: true
+  report:
+    description: Optional HOI4 CI JSON report path.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Post result to Discord
+      shell: bash
+      env:
+        DISCORD_WEBHOOK_URL: ${{ inputs.webhook-url }}
+        HOI4_CI_JOB_NAME: ${{ inputs.job-name }}
+        HOI4_CI_JOB_STATUS: ${{ inputs.job-status }}
+        HOI4_CI_REPORT: ${{ inputs.report }}
+        PYTHONDONTWRITEBYTECODE: "1"
+      run: python "${{ github.action_path }}/send.py"

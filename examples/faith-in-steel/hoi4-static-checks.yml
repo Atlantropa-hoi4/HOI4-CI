@@ -59,6 +59,16 @@ jobs:
           path: hoi4-ci-report.json
           if-no-files-found: warn
           retention-days: 7
+
+      - name: Send smoke result to Discord
+        if: always()
+        uses: Atlantropa-hoi4/HOI4-CI/discord-notify@REVIEWED_COMMIT_SHA
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          job-name: Smoke checks
+          job-status: ${{ job.status }}
+          report: hoi4-ci-report.json
+
   full:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -102,3 +112,12 @@ jobs:
           path: hoi4-ci-report.json
           if-no-files-found: warn
           retention-days: 7
+
+      - name: Send full result to Discord
+        if: always()
+        uses: Atlantropa-hoi4/HOI4-CI/discord-notify@REVIEWED_COMMIT_SHA
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          job-name: Full checks
+          job-status: ${{ job.status }}
+          report: hoi4-ci-report.json
