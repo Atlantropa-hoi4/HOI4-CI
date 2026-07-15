@@ -12,6 +12,7 @@ from urllib import error, parse, request
 
 PASS_COLOR = 0x2DA44E
 FAIL_COLOR = 0xD1242F
+USER_AGENT = "DiscordBot (https://github.com/Atlantropa-hoi4/HOI4-CI, 1.0)"
 
 
 def build_payload(environ: dict[str, str]) -> dict[str, object]:
@@ -145,7 +146,10 @@ def main() -> int:
         webhook_request = request.Request(
             webhook_url_with_wait(webhook_url),
             data=data,
-            headers={"Content-Type": content_type},
+            headers={
+                "Content-Type": content_type,
+                "User-Agent": USER_AGENT,
+            },
             method="POST",
         )
         with request.urlopen(webhook_request, timeout=15) as response:
